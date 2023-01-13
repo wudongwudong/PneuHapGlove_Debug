@@ -25,7 +25,7 @@ public class FrequencyTest : MonoBehaviour
         Debug.Log("Beat Hit Interval Half: " + beatHitInterval_half);
     }
 
-    public byte duty = 0;
+    public byte duty = 0;   //PWM duty for vibration motor
     public void OnButtonClick()
     {
         if (beatOn == false)
@@ -46,7 +46,7 @@ public class FrequencyTest : MonoBehaviour
                 valveTiming[1] = (byte) (500 / frequency_Hz);
             }
 
-            valveTiming[1] = duty;
+            //valveTiming[1] = duty;
 
             Haptics.ApplyHapticsWithTiming(frequency_Hz, clutchState, valveTiming);
             //Haptics.ApplyHaptics(clutchState, targetPres);
@@ -74,6 +74,85 @@ public class FrequencyTest : MonoBehaviour
                 //beatStayInterval_buf = beatStayInterval;
             }
         }
+    }
+
+    public void PneuIndenterVideoDemo()
+    {
+        StartCoroutine(PneuIndenterVideoSequence());
+    }
+
+    public void PneuClutchVideoDemo()
+    {
+        StartCoroutine(PneuClutchVideoSequence());
+    }
+    private IEnumerator PneuClutchVideoSequence()        //70kpa 14 34 200
+    {
+        yield return new WaitForSeconds(5.0f);
+        byte[] clutchState = { 0, 0 };
+        byte[] valveTiming = {15, 255};
+        Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+        yield return new WaitForSeconds(5.0f);
+        clutchState = new byte[]{ 0, 2 };
+        valveTiming = new byte[] { 15, 255 };
+        Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+
+        yield return new WaitForSeconds(2.0f);
+
+        clutchState = new byte[] { 0, 0 };
+        valveTiming = new byte[] { 36, 255 };
+        Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+        yield return new WaitForSeconds(5.0f);
+        clutchState = new byte[] { 0, 2 };
+        valveTiming = new byte[] { 36, 255 };
+        Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+
+        yield return new WaitForSeconds(2.0f);
+
+        clutchState = new byte[] { 0, 0 };
+        valveTiming = new byte[] { 200, 255 };
+        Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+        yield return new WaitForSeconds(5.0f);
+        clutchState = new byte[] { 0, 2 };
+        valveTiming = new byte[] { 200, 255 };
+        Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+    }
+
+    private IEnumerator PneuIndenterVideoSequence()     //42kpa, 2s 1hz, 2s 1hz, 2s 10hz, 2s 100hz
+    {
+        frequency_Hz = 1;
+        fingerID = 0;
+        valveOnTiming = 6;
+        OnButtonClick();
+        yield return new WaitForSeconds(3.0f);
+        OnButtonClick();
+        yield return new WaitForSeconds(1.0f);
+
+        frequency_Hz = 1;
+        fingerID = 0;
+        valveOnTiming = 15;
+        OnButtonClick();
+        yield return new WaitForSeconds(3.0f);
+        OnButtonClick();
+        yield return new WaitForSeconds(1.0f);
+
+        frequency_Hz = 10;
+        fingerID = 0;
+        valveOnTiming = 6;
+        OnButtonClick();
+        yield return new WaitForSeconds(3.0f);
+        OnButtonClick();
+        yield return new WaitForSeconds(1.0f);
+         
+        frequency_Hz = 100;
+        fingerID = 0;
+        valveOnTiming = 3;
+        OnButtonClick();
+        yield return new WaitForSeconds(3.0f);
+        OnButtonClick();
+
+        byte[] clutchState = { fingerID, 2 };
+        Haptics.ApplyHapticsWithTiming(clutchState, new byte[] { 0, 255 });
+
     }
 
 

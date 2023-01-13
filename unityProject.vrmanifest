@@ -5,7 +5,7 @@
       "app_key": "application.generated.unity.pneuclutch_v1.0.exe",
       "launch_type": "url",
       "url": "steam://launch/",
-      "action_manifest_path": "D:\\Haptics\\UnityProjects\\PneuClutch_v1.0\\Assets\\StreamingAssets\\SteamVR\\actions.json",
+      "action_manifest_path": "C:\\Users\\JM\\Documents\\Haptics\\UnityProjects\\PneuClutch_v1.0\\Assets\\StreamingAssets\\SteamVR\\actions.json",
       "strings": {
         "en_us": {
           "name": "PneuClutch_v1.0 [Testing]"

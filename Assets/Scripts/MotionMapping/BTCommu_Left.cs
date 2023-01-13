@@ -60,6 +60,14 @@ public class BTCommu_Left : MonoBehaviour
     private StreamWriter sw;
     private long milliseconds_Start;
 
+    public Toggle lifetimeTestStart;
+    public Slider totalTimeSlider;
+
+    public InputField presInputField;
+    public InputField durationInputField;
+    public InputField durationInputField_Sec;
+    public Toggle toggleDemoForce;
+
     private enum funList : byte
     {
         FI_BMP280 = 0x01,
@@ -101,54 +109,114 @@ public class BTCommu_Left : MonoBehaviour
         milliseconds_Start = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
     }
 
+    private byte pressure;
+    private int duration;
+    private int duration_sec;
+    private bool startDelay = false;
+    private long startTime;
+    private long endTime;
 
-    private float timerOn = 3f;
-    private float timerOff = 4f;
+    public void SendHapticsWithDuration()
+    {
+        pressure = Convert.ToByte(presInputField.text);
+        duration = Convert.ToInt32(durationInputField.text);
+        duration_sec = Convert.ToInt32(durationInputField_Sec.text);
+
+        Haptics.ApplyHapticsWithTiming(new byte[] {1, 0}, new byte[]{pressure,14});
+        Debug.Log("DemoForceStart: " + DateTime.Now.ToString("HH:mm:ss.fff"));
+        //delay
+        startTime = Environment.TickCount;
+        startDelay = true;
+        
+        
+        
+    }
+
+    private bool endDelay = false;
+    void FixedUpdate()
+    {
+        if (startDelay)
+        {
+            if (Environment.TickCount >= startTime + duration)
+            {
+                Haptics.ApplyHapticsWithTiming(new byte[] { 1, 2 }, new byte[] { pressure, 14 });
+                Debug.Log("DemoForceEnd: " + DateTime.Now.ToString("HH:mm:ss.fff"));
+                startDelay = false;
+                endTime = Environment.TickCount;
+                endDelay = true;
+            }
+        }
+
+        if (endDelay)
+        {
+            if (Environment.TickCount >= endTime + duration_sec)
+            {
+                Haptics.ApplyHapticsWithTiming(new byte[] { 1, 2 }, new byte[] { pressure, 255 });
+                Debug.Log("DemoForceEnd: " + DateTime.Now.ToString("HH:mm:ss.fff"));
+                endDelay = false;
+            }
+            
+        }
+
+    }
+
+    private float timerOn = 0f;
+    private float timerOff = 2f;//3
     private byte fingerID = 0;
     private bool btStart = false;
     private bool btEndTimeIsPrint = false;
 
-
     //持续单指充气30kpa
-    //void Update()
-    //{
-    //    if (btHelper.isConnected())
-    //    {
-    //        timerOn -= Time.deltaTime;
-    //        if (timerOn <= 0)
-    //        {
-    //            byte[] clutchState = { fingerID, 0 };
-    //            Haptics.ApplyHaptics(clutchState, 30);
-    //            timerOn = 3f;
-    //            //Debug.Log("Haptic Loop On:\t" + clutchState[0] + "\t" + clutchState[1]);
-    //        }
+    void Update()
+    {
+        if (btHelper.isConnected())
+        {
+            if (lifetimeTestStart.isOn)
+            {
+                timerOn -= Time.deltaTime;
+                if (timerOn <= 0)
+                {
+                    byte[] clutchState = { fingerID, 0 };
+                    byte[] clutchTiming = { 27, 150 };
+                    Haptics.ApplyHapticsWithTiming(clutchState, clutchTiming);
+                    timerOn = totalTimeSlider.value;//6
+                    //Debug.Log("Haptic Loop On:\t" + clutchState[0] + "\t" + clutchState[1]);
+                }
 
-    //        timerOff -= Time.deltaTime;
-    //        if (timerOff <= 0)
-    //        {
-    //            byte[] clutchState = { fingerID, 2 };
-    //            Haptics.ApplyHaptics(clutchState, 30);
-    //            timerOff = 3f;
-    //            fingerID++;
-    //            if (fingerID == 5)
-    //            {
-    //                fingerID = 0;
-    //            }
-    //            //Debug.Log("Haptic Loop Off:\t" + clutchState[0] + "\t" + clutchState[1]);
-    //        }
-    //    }
-    //    else
-    //    {
-    //        if ((btStart == true) & (btEndTimeIsPrint == false))
-    //        {
-    //            btEndTime = DateTime.Now;
-    //            Debug.Log("Haptic Glove End: " + btEndTime);
-    //            btEndTimeIsPrint = true;
-    //        }
-            
-    //    }
+                timerOff -= Time.deltaTime;
+                if (timerOff <= 0)
+                {
+                    byte[] clutchState = { fingerID, 2 };
+                    byte[] clutchTiming = { 27, 150 };
+                    Haptics.ApplyHapticsWithTiming(clutchState, clutchTiming);
+                    timerOff = totalTimeSlider.value;//6
+                    //fingerID++;
+                    //if (fingerID == 5)
+                    //{
+                    //    fingerID = 0;
+                    //}
+                    //Debug.Log("Haptic Loop Off:\t" + clutchState[0] + "\t" + clutchState[1]);
+                }
+            }
+            else
+            {
+                timerOn = 0f;
+                timerOff = 2f;//3
+            }
 
-    //}
+        }
+        else
+        {
+            if ((btStart == true) & (btEndTimeIsPrint == false))
+            {
+                btEndTime = DateTime.Now;
+                Debug.Log("Haptic Glove End: " + btEndTime);
+                btEndTimeIsPrint = true;
+            }
+
+        }
+
+    }
 
     // Establish communication
     public void BTConnection()

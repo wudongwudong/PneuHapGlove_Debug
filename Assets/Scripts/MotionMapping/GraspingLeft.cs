@@ -24,6 +24,7 @@ public class GraspingLeft : MonoBehaviour
     private Text textSliderOff;
     private Slider sliderOn;
     private Slider sliderOff;
+    public Button OnMinusFive, OnMinusOne, OffMinusFive, OffMinusOne, OnPlusFive, OnPlusOne, OffPlusFive, OffPlusOne;
 
     private FingerMapping_Left fingerMappingLeft;
     private float[] hapticStartPosition = new float[5];
@@ -46,6 +47,15 @@ public class GraspingLeft : MonoBehaviour
         textSliderOff = GameObject.Find("Text Slider Off").GetComponent<Text>();
         sliderOn = GameObject.Find("Slider On Duration").GetComponent<Slider>();
         sliderOff = GameObject.Find("Slider Off Duration").GetComponent<Slider>();
+
+        OnMinusFive.onClick.AddListener(delegate { sliderOn.value -= 5; });
+        OnMinusOne.onClick.AddListener(delegate { sliderOn.value -= 1; });
+        OnPlusFive.onClick.AddListener(delegate { sliderOn.value += 5; });
+        OnPlusOne.onClick.AddListener(delegate { sliderOn.value += 1; });
+        OffMinusFive.onClick.AddListener(delegate { sliderOff.value -= 5; });
+        OffMinusOne.onClick.AddListener(delegate { sliderOff.value -= 1; });
+        OffPlusFive.onClick.AddListener(delegate { sliderOff.value += 5; });
+        OffPlusOne.onClick.AddListener(delegate { sliderOff.value += 1; });
     }
 
     void FixedUpdate()
