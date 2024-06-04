@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Analytics;
 using UnityEngine.UI;
@@ -25,10 +24,13 @@ public class GraspingLeft : MonoBehaviour
     private Slider sliderOn;
     private Slider sliderOff;
     public Button OnMinusFive, OnMinusOne, OffMinusFive, OffMinusOne, OnPlusFive, OnPlusOne, OffPlusFive, OffPlusOne;
+    public InputField setPressure; 
 
     private FingerMapping_Left fingerMappingLeft;
     private float[] hapticStartPosition = new float[5];
     private float[] hapticModifiedPosition = new float[5];
+
+    public BTCommu_Left btCommu;
 
     void Start()
     {
@@ -307,60 +309,196 @@ public class GraspingLeft : MonoBehaviour
     {
         byte[] clutchState = {0, 0};
         byte[] valveTiming = SetValveTimingFromSlider();
-        Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+
+        if (setPressure.text != "")
+        {
+            Debug.Log(Convert.ToByte(setPressure.text).ToString());
+            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+        }
+            
+        else
+            Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+
     }
     public void ThumbExClick()
     {
         byte[] clutchState = { 0, 2 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+        if (setPressure.text != "")
+            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+        else
+            Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
     public void IndexInClick()
     {
         byte[] clutchState = { 1, 0 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+        if (setPressure.text != "")
+            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+        else
+            Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
     public void IndexExClick()
     {
         byte[] clutchState = { 1, 2 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+        if (setPressure.text != "")
+            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+        else
+            Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
     public void MiddleInClick()
     {
         byte[] clutchState = { 2, 0 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+        if (setPressure.text != "")
+            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+        else
+            Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
     public void MiddleExClick()
     {
         byte[] clutchState = { 2, 2 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+        if (setPressure.text != "")
+            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+        else
+            Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
     public void RingInClick()
     {
         byte[] clutchState = { 3, 0 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+        if (setPressure.text != "")
+            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+        else
+            Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
     public void RingExClick()
     {
         byte[] clutchState = { 3, 2 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+        if (setPressure.text != "")
+            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+        else
+            Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
     public void PinkyInClick()
     {
         byte[] clutchState = { 4, 0 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+        if (setPressure.text != "")
+            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+        else
+            Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
     public void PinkyExClick()
     {
         byte[] clutchState = { 4, 2 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+        if (setPressure.text != "")
+            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+        else
+            Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+    }
+
+    public void PalmInClick()
+    {
+        byte[] clutchState = { 5, 0 };
+        byte[] valveTiming = SetValveTimingFromSlider();
+        if (setPressure.text != "")
+            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+        else
+            Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+    }
+    public void PalmExClick()
+    {
+        byte[] clutchState = { 5, 2 };
+        byte[] valveTiming = SetValveTimingFromSlider();
+        if (setPressure.text != "")
+            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+        else
+            Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
+    }
+
+    public void AllInClick()
+    {
+        byte[][] clutchStates = new byte[6][]
+        {
+            new Byte[] { 0x00, 0x00 }, new Byte[] { 0x01, 0x00 }, new Byte[] { 0x02, 0x00 }, 
+            new Byte[] { 0x03, 0x00 }, new Byte[] { 0x04, 0x00 }, new Byte[] { 0x05, 0x00 }
+        };
+        byte[][] valveTimings = new byte[6][]
+        {
+            SetValveTimingFromSlider(), SetValveTimingFromSlider(), SetValveTimingFromSlider(),
+            SetValveTimingFromSlider(), SetValveTimingFromSlider(), SetValveTimingFromSlider()
+        };
+        if (setPressure.text != "")
+            Haptics.ApplyHaptics(clutchStates, Convert.ToByte(setPressure.text));
+        else
+            Haptics.ApplyHapticsWithTiming(clutchStates, valveTimings);
+    }
+    public void AllExClick()
+    {
+        byte[][] clutchStates = new byte[6][]
+        {
+            new Byte[] { 0x00, 0x02 }, new Byte[] { 0x01, 0x02 }, new Byte[] { 0x02, 0x02 },
+            new Byte[] { 0x03, 0x02 }, new Byte[] { 0x04, 0x02 }, new Byte[] { 0x05, 0x02 }
+        };
+        byte[][] valveTimings = new byte[6][]
+        {
+            SetValveTimingFromSlider(), SetValveTimingFromSlider(), SetValveTimingFromSlider(),
+            SetValveTimingFromSlider(), SetValveTimingFromSlider(), SetValveTimingFromSlider()
+        };
+        if (setPressure.text != "")
+            Haptics.ApplyHaptics(clutchStates, Convert.ToByte(setPressure.text));
+        else
+            Haptics.ApplyHapticsWithTiming(clutchStates, valveTimings);
+    }
+
+    private Text startPositionText, curPositionText;
+    private int startPosition, curPosition;
+    public void PalpationInClick()
+    {
+        startPositionText = GameObject.Find("TexStartForce").GetComponent<Text>();
+        startPosition = btCommu.microtubeData[1] + btCommu.microtubeData[2] + btCommu.microtubeData[3];
+        startPositionText.text = startPosition.ToString();
+
+        byte[][] clutchStates = new byte[][]
+        {
+            new Byte[] { 0x01, 0x00 }, new Byte[] { 0x02, 0x00 },
+            new Byte[] { 0x03, 0x00 }
+        };
+        byte[][] valveTimings = new byte[][]
+        {
+            SetValveTimingFromSlider(), SetValveTimingFromSlider(), SetValveTimingFromSlider()
+        };
+        if (setPressure.text != "")
+            Haptics.ApplyHaptics(clutchStates, Convert.ToByte(setPressure.text));
+        else
+            Haptics.ApplyHapticsWithTiming(clutchStates, valveTimings);
+    }
+    public void PalpationExClick()
+    {
+        byte[][] clutchStates = new byte[][]
+        {
+            new Byte[] { 0x01, 0x02 }, new Byte[] { 0x02, 0x02 },
+            new Byte[] { 0x03, 0x02 }
+        };
+        byte[][] valveTimings = new byte[][]
+        {
+            SetValveTimingFromSlider(), SetValveTimingFromSlider(), SetValveTimingFromSlider()
+        };
+        if (setPressure.text != "")
+            Haptics.ApplyHaptics(clutchStates, Convert.ToByte(setPressure.text));
+        else
+            Haptics.ApplyHapticsWithTiming(clutchStates, valveTimings);
+    }
+
+    void Update()
+    {
+        curPositionText = GameObject.Find("TextCurrentForce").GetComponent<Text>();
+        curPosition = btCommu.microtubeData[1] + btCommu.microtubeData[2] + btCommu.microtubeData[3] - startPosition;
+        curPositionText.text = curPosition.ToString();
     }
 }

@@ -190,7 +190,7 @@ public class Haptics : MonoBehaviour
             Encode.Instance.add_u8(frequency);
             Encode.Instance.add_u8(clutchState[0]);             // which finger
             Encode.Instance.add_u8(clutchState[1]);             // enter, stay or exit
-            Encode.Instance.add_u8(10);
+            Encode.Instance.add_u8(0);
             Encode.Instance.add_u8(vOpen);
             Encode.Instance.add_u8(vDelay);
             byte[] buf = Encode.Instance.add_fun(0x03);       // FI = 3
@@ -218,7 +218,7 @@ public class Haptics : MonoBehaviour
             Encode.Instance.add_u8(frequency);
             Encode.Instance.add_u8(clutchState[0]);             // which finger
             Encode.Instance.add_u8(clutchState[1]);             // enter, stay or exit
-            Encode.Instance.add_u8(10);
+            Encode.Instance.add_u8(0);
             Encode.Instance.add_u8(vOpen);
             Encode.Instance.add_u8(vDelay);
             byte[] buf = Encode.Instance.add_fun(0x03);       // FI = 3
@@ -277,7 +277,7 @@ public class Haptics : MonoBehaviour
         Encode.Instance.add_u8(frequency);
         Encode.Instance.add_u8(fingerID); // which finger
         Encode.Instance.add_u8(status); // enter, stay or exit
-        Encode.Instance.add_u8(10);
+        Encode.Instance.add_u8(0);
         Encode.Instance.add_u8(vOpen);
         Encode.Instance.add_u8(vDelay);
         byte[] buf = Encode.Instance.add_fun(0x03); // FI = 3
@@ -422,7 +422,7 @@ public class Haptics : MonoBehaviour
 //            //±àÂë+BT·¢ËÍ
 //            Encode.Instance.add_u8(clutchState[0]);             // which finger
 //            Encode.Instance.add_u8(clutchState[1]);             // enter, stay or exit
-//            Encode.Instance.add_u8(10);
+//            Encode.Instance.add_u8(0);
 //            Encode.Instance.add_u8(vOpen);
 //            Encode.Instance.add_u8(vDelay);
 //            byte[] buf = Encode.Instance.add_fun(0x03);       // FI = 3
@@ -462,7 +462,7 @@ public class Haptics : MonoBehaviour
 //        //±àÂë+BT·¢ËÍ
 //        Encode.Instance.add_u8(fingerID); // which finger
 //        Encode.Instance.add_u8(status); // enter, stay or exit
-//        Encode.Instance.add_u8(10);
+//        Encode.Instance.add_u8(0);
 //        Encode.Instance.add_u8(vOpen);
 //        Encode.Instance.add_u8(vDelay);
 //        byte[] buf = Encode.Instance.add_fun(0x03); // FI = 3

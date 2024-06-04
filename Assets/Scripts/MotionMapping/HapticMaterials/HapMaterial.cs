@@ -161,12 +161,12 @@ public class HapMaterial : MonoBehaviour
 
     public static byte[] CalculateValveTiming(byte tarPres, byte fingerID, int presSource)
     {
-        if (BTCommu_Left.Instance.deviceName == "PneuHapGlove L")
+        if (BTCommu_Left.Instance.deviceName == "HaptGloveAR Left")
         {
             valveCaliOn = valveCaliOn_L;
             valveCaliOff = valveCaliOff_L;
         }
-        else if (BTCommu_Left.Instance.deviceName == "PneuHapGlove M")
+        else if (BTCommu_Left.Instance.deviceName == "HaptGloveAR Right")
         {
             valveCaliOn = valveCaliOn_M;
             valveCaliOff = valveCaliOff_M;
@@ -179,21 +179,21 @@ public class HapMaterial : MonoBehaviour
 
         byte[] valveOnOff = new byte[2];
 
-        int presDif = (170000 - presSource) / 2000;
-        if (presDif < 0) { presDif = 0; }
-        else if (presDif > 4) { presDif = 4; }
+        //int presDif = (170000 - presSource) / 2000;
+        //if (presDif < 0) { presDif = 0; }
+        //else if (presDif > 4) { presDif = 4; }
 
-        byte[] valveSelectedOn = new byte[6];
-        byte[] valveSelectedOff = new byte[6];
-        for (int i = 0; i < 6; i++)
-        {
-            valveSelectedOn[i] = valveCaliOn[presDif, fingerID, i];
-            valveSelectedOff[i] = valveCaliOff[fingerID, i];
-        }
-        //byte[] valveSelectedOn = GetArrayFromVector4(valveCaliOn[presDif, fingerID]);
-        //byte[] valveSelectedOff = GetArrayFromVector4(valveCaliOff[fingerID]);
+        //byte[] valveSelectedOn = new byte[6];
+        //byte[] valveSelectedOff = new byte[6];
+        //for (int i = 0; i < 6; i++)
+        //{
+        //    valveSelectedOn[i] = valveCaliOn[presDif, fingerID, i];
+        //    valveSelectedOff[i] = valveCaliOff[fingerID, i];
+        //}
+        ////byte[] valveSelectedOn = GetArrayFromVector4(valveCaliOn[presDif, fingerID]);
+        ////byte[] valveSelectedOff = GetArrayFromVector4(valveCaliOff[fingerID]);
 
-        valveOnOff = GetValveTiming(tarPres, valveSelectedOn, valveSelectedOff);
+        //valveOnOff = GetValveTiming(tarPres, valveSelectedOn, valveSelectedOff);
 
 
         return valveOnOff;
