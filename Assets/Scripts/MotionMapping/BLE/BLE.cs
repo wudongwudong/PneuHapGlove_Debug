@@ -130,6 +130,7 @@ public class BLE
             throw new InvalidOperationException("the old scan is still running");
         currentScan.Found = null;
         currentScan.Finished = null;
+        currentScan.cancelled = false;
         scanThread = new Thread(() =>
         {
             Impl.StartDeviceScan();
@@ -149,7 +150,11 @@ public class BLE
                     currentScan.Found?.Invoke(res.id, deviceNames[res.id]);
                 // check if scan was cancelled in callback
                 if (currentScan.cancelled)
+                {
+                    Debug.Log("scan thread cancelled.");
                     break;
+                }
+                    
             }
             currentScan.Finished?.Invoke();
             scanThread = null;

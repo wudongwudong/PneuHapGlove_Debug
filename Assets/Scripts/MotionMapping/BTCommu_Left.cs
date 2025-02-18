@@ -8,13 +8,14 @@ using System.Threading;
 using System.Linq;
 using UnityEngine;
 using ArduinoBluetoothAPI;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 #if BLE
 public class BTCommu_Left : MonoBehaviour
 {
-    //private FileStream fs;
-    //private StreamWriter sw;
+    private FileStream fs;
+    private StreamWriter sw;
 
     static BTCommu_Left _instance;
     public static BTCommu_Left Instance
@@ -39,6 +40,9 @@ public class BTCommu_Left : MonoBehaviour
 
     private Text pressureSource, thumbPres, indexPres, middlePres, ringPres, pinkyPres, palmPres;
     private Text thumbR, indexR, middleR, ringR, pinkyR;
+    private Text textLog;
+    private Text textBatteryLevel;
+    private string log = "Log";
 
     [Header("BLE Connection")]
     public string targetDeviceName = "HaptGloveAR Right";
@@ -55,11 +59,9 @@ public class BTCommu_Left : MonoBehaviour
     // BLE Threads 
     Thread scanningThread, connectionThread, readingThread, serialthread, calibrationThread;
 
-    public bool isPause;
-
     public GraspingLeft graspingScript;
     public FingerMapping_Left fingerMappingLeftScript;
-    public Int32[] microtubeData = new Int32[5];
+    public double[] microtubeData = new double[5];
     public float[] pressureData = new float[7];
     public byte sourcePres = 68; //kpa
 
@@ -71,15 +73,24 @@ public class BTCommu_Left : MonoBehaviour
 
     private Int32[] tick = new int[2];
 
-
+    public UnityAction<BatteryState> onBatteryStateChange;
 
     private enum funList : byte
     {
         FI_BMP280 = 0x01,
 
         FI_MICROTUBE = 0x04,
-        FI_CLUTCHGOTACTIVATED = 0x05
+        FI_CLUTCHGOTACTIVATED = 0x05,
+        FI_BATTERY = 0x06
     };
+
+    public enum BatteryState
+    {
+        Full,
+        Medium,
+        Low
+    }
+    public BatteryState batteryState = BatteryState.Full;
 
     void Start()
     {
@@ -97,106 +108,172 @@ public class BTCommu_Left : MonoBehaviour
         ringR = GameObject.Find("TextRingR").GetComponent<Text>();
         pinkyR = GameObject.Find("TextPinkyR").GetComponent<Text>();
 
+        textLog = GameObject.Find("TextLog").GetComponent<Text>();
+
+        textBatteryLevel = GameObject.Find("TexBatteryLevel").GetComponent<Text>();
+
         ble = new BLE();
 
         readingThread = new Thread(ReadBleData);
 
 
-        //string filePath = "C:\\Users\\JM\\Desktop\\"+ "ScissorCuttingData_"+deviceName +".csv"; //scissor cutting
-        //if (File.Exists(filePath))
-        //{
-        //    fs = new FileStream(filePath, FileMode.Append, FileAccess.Write);
-        //}
-        //else
-        //{
-        //    fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-        //}
-        //sw = new StreamWriter(fs, System.Text.Encoding.UTF8);
+        string filePath = "C:\\Users\\JM\\Desktop\\" + "ForceSensorCalibration_" + deviceName + ".csv"; //scissor cutting
+        if (File.Exists(filePath))
+        {
+            fs = new FileStream(filePath, FileMode.Append, FileAccess.Write);
+        }
+        else
+        {
+            fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+        }
+        sw = new StreamWriter(fs, System.Text.Encoding.UTF8);
 
-        //sw.WriteLine("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-        //sw.WriteLine(deviceName + "," + DateTime.Now.ToString("yyyy-MM-dd"));
-        //sw.Flush();
+        sw.WriteLine("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+        sw.WriteLine(deviceName + "," + DateTime.Now.ToString("yyyy-MM-dd-HH:mm"));
+        sw.WriteLine("Tick" + "," + "F_thumb" + "F_index" + "F_middle" + "F_ring" + "F_pinky" + "R_thumb" + "R_index" + "R_middle" + "R_ring");
+        sw.Flush();
 
         //sw.Close();
         //fs.Close();
 
-        isPause = false;
     }
 
+    IEnumerator Delay(float second)
+    {
+        yield return new WaitForSeconds(second);
+    }
+
+    private float updateBatLevelInterval = 5f;//
+    private float timerInUpdate = 0;
     void Update()
     {
-        thumbPres.text = pressureData[0].ToString();
-        indexPres.text = pressureData[1].ToString();
-        middlePres.text = pressureData[2].ToString();
-        ringPres.text = pressureData[3].ToString();
-        pinkyPres.text = pressureData[4].ToString();
-        palmPres.text = pressureData[5].ToString();
-        pressureSource.text = pressureData[6].ToString();
+        thumbPres.text = pressureData[0].ToString("0.00");
+        indexPres.text = pressureData[1].ToString("0.00");
+        middlePres.text = pressureData[2].ToString("0.00");
+        ringPres.text = pressureData[3].ToString("0.00");
+        pinkyPres.text = pressureData[4].ToString("0.00");
+        palmPres.text = pressureData[5].ToString("0.00");
+        pressureSource.text = pressureData[6].ToString("0.00");
 
-        thumbR.text = microtubeData[0].ToString();
-        indexR.text = microtubeData[1].ToString();
-        middleR.text = microtubeData[2].ToString();
-        ringR.text = microtubeData[3].ToString();
-        pinkyR.text = microtubeData[4].ToString();
+        thumbR.text = microtubeData[0].ToString("0.00");
+        indexR.text = microtubeData[1].ToString("0.00");
+        middleR.text = microtubeData[2].ToString("0.00");
+        ringR.text = microtubeData[3].ToString("0.00");
+        pinkyR.text = microtubeData[4].ToString("0.00");
 
-        Grapher.Log(microtubeData[0], "CH0", Color.white);
-        Grapher.Log(microtubeData[1], "CH1", Color.red);
-        Grapher.Log(microtubeData[2], "CH2", Color.green);
-        Grapher.Log(microtubeData[3], "CH3", Color.cyan);
+        textBatteryLevel.text = "Battery: " + ((int)(batteryLevel*100)).ToString() + "%";
 
-        if (!isPause)
+        Grapher.Log((float)microtubeData[0], "CH0", Color.white);
+        Grapher.Log((float)microtubeData[1], "CH1", Color.red);
+        Grapher.Log((float)microtubeData[2], "CH2", Color.green);
+        Grapher.Log((float)microtubeData[3], "CH3", Color.cyan);
+
+        Grapher.Log((float)pressureData[0], "CH4", Color.blue);
+
+        textLog.text = log;
+
+        if (btConnection)
         {
-            //Scan BLE devices 
-            if (isScanning)
-            {
-                /*if (scene.name != "straightPathsLevel" && scene.name != "shooting")
-                {
-                    if (ButtonStartScan.enabled)
-                        ButtonStartScan.enabled = false;
-                }*/
+            timerInUpdate++;
+            if (timerInUpdate < updateBatLevelInterval)
+                return;
 
-                if (discoveredDevices.Count > devicesCount)
+            if (batteryLevel >= 1)
+            {
+                if (batteryState != BatteryState.Full)
                 {
-                    foreach (KeyValuePair<string, string> entry in discoveredDevices.ToList())
-                    {
-                        Debug.Log("Added device: " + entry.Key);
-                    }
-                    devicesCount = discoveredDevices.Count;
+                    batteryState = BatteryState.Full;
+                    Debug.Log(BatteryState.Full);
+                    if (onBatteryStateChange != null)
+                        onBatteryStateChange(batteryState);
+                }
+            }
+            else if ((batteryLevel < 0.95) & (batteryLevel > 0.25))
+            {
+                if (batteryState != BatteryState.Medium)
+                {
+                    batteryState = BatteryState.Medium;
+                    Debug.Log(BatteryState.Medium);
+                    if (onBatteryStateChange != null)
+                        onBatteryStateChange(batteryState);
+                }
+            }
+            else if (batteryLevel < 0.15)
+            {
+                if (batteryState != BatteryState.Low)
+                {
+                    batteryState = BatteryState.Low;
+                    Debug.Log(BatteryState.Low);
+                    if (onBatteryStateChange != null)
+                        onBatteryStateChange(batteryState);
                 }
             }
 
-            // The target device was found.
-            if (deviceId != null && deviceId != "-1")
+            
+        }
+
+        //Scan BLE devices 
+        if (isScanning)
+        {
+            /*if (scene.name != "straightPathsLevel" && scene.name != "shooting")
             {
-                // Target device is connected and GUI knows.
-                if (ble.isConnected && btConnection)
+                if (ButtonStartScan.enabled)
+                    ButtonStartScan.enabled = false;
+            }*/
+
+            if ((discoveredDevices.Count != 0) & (discoveredDevices.Count > devicesCount))
+            {
+                //Debug.Log("discoveredDevices count = " + discoveredDevices.Count);
+
+                foreach (KeyValuePair<string, string> entry in discoveredDevices.ToList())
                 {
-                    if (!readingThread.IsAlive)
-                    {
-                        readingThread = new Thread(ReadBleData);
-                        readingThread.Start();
-                    }
-                }
-                // Target device is connected, but GUI hasn't updated yet.
-                else if (ble.isConnected && !btConnection)
-                {
-                    btConnection = true;
-                    /*if (scene.name != "straightPathsLevel" && scene.name != "shooting")
-                    {
-                        ButtonEstablishConnection.enabled = false;
-                    }*/
-                    Debug.Log("Connected to target device: " + targetDeviceName);
+                    //Debug.Log(discoveredDevices.Count);
+                    Debug.Log("Added device: " + entry.Key);
                 }
 
-                /*else if (scene.name != "straightPathsLevel" && scene.name != "shooting" && !ButtonEstablishConnection.enabled && !_connected)
-                {
-                    ButtonEstablishConnection.enabled = true;
-                    Debug.Log("Found target device:\n" + targetDeviceName);
-                }*/
+                //for (int i = 0; i < discoveredDevices.Count; i++)
+                //{
+                //    discoveredDevices.
+                //    Debug.Log("Added device: " + entry.Key);
+                //}
 
 
+                //devicesCount = discoveredDevices.Count;
+                Debug.Log("device count = " + devicesCount);
             }
         }
+
+        // The target device was found.
+        if (deviceId != null && deviceId != "-1")
+        {
+            // Target device is connected and GUI knows.
+            if (ble.isConnected && btConnection)
+            {
+                if (!readingThread.IsAlive)
+                {
+                    readingThread = new Thread(ReadBleData);
+                    readingThread.Start();
+                }
+            }
+            // Target device is connected, but GUI hasn't updated yet.
+            else if (ble.isConnected && !btConnection)
+            {
+                btConnection = true;
+                /*if (scene.name != "straightPathsLevel" && scene.name != "shooting")
+                {
+                    ButtonEstablishConnection.enabled = false;
+                }*/
+                Debug.Log("Connected to target device: " + targetDeviceName);
+                log = "Connected to target device: " + targetDeviceName;
+            }
+
+            /*else if (scene.name != "straightPathsLevel" && scene.name != "shooting" && !ButtonEstablishConnection.enabled && !_connected)
+            {
+                ButtonEstablishConnection.enabled = true;
+                Debug.Log("Found target device:\n" + targetDeviceName);
+            }*/
+        }
+        
     }
 
     public InputField presInputField;
@@ -317,20 +394,25 @@ public class BTCommu_Left : MonoBehaviour
     {
         if (ble.isConnected)
         {
-            ble.Close();
+            ResetHandler();
+            Debug.Log("STOP BLE. BLE isConnected: " + ble.isConnected.ToString());
+            log = "STOP BLE. BLE isConnected: " + ble.isConnected.ToString();
+
             ble = new BLE();
 
-            Debug.Log("STOP BLE. BLE isConnected: " + ble.isConnected.ToString());
         }
         else
         {
-            devicesCount = 0;
-            isScanning = true;
-            discoveredDevices.Clear();
-            deviceId = null;
+            if (deviceId != null)
+            {
+                ResetHandler();
+            }
             scanningThread = new Thread(ScanBleDevices);
             scanningThread.Start();
+            isScanning = true;
+
             Debug.Log("Scanning for..." + targetDeviceName);
+            log = "Scanning for..." + targetDeviceName;
         }
     }
 
@@ -346,6 +428,7 @@ public class BTCommu_Left : MonoBehaviour
     {
         scan = BLE.ScanDevices();
         Debug.Log("BLE.ScanDevices() started.");
+        log = "BLE.ScanDevices() started.";
         scan.Found = (_deviceId, deviceName) =>
         {
             Debug.Log("found device with name: " + deviceName);
@@ -355,6 +438,7 @@ public class BTCommu_Left : MonoBehaviour
             if (deviceId == null && deviceName.Contains(targetDeviceName))
             {
                 deviceId = _deviceId;
+                Debug.Log("deviceID: " + deviceId);
                 //ble.deviceID = deviceId;
                 StartConHandler();
             }
@@ -364,11 +448,15 @@ public class BTCommu_Left : MonoBehaviour
         {
             isScanning = false;
             Debug.Log("scan finished");
+            log = "scan finished.";
             if (deviceId == null)
                 deviceId = "-1";
         };
         while (deviceId == null)
+        {
             Thread.Sleep(500);
+        }
+
         scan.Cancel();
         scanningThread = null;
         isScanning = false;
@@ -376,6 +464,7 @@ public class BTCommu_Left : MonoBehaviour
         if (deviceId == "-1")
         {
             Debug.Log("no device found!");
+            log = "no device found!";
             return;
         }
 
@@ -394,10 +483,16 @@ public class BTCommu_Left : MonoBehaviour
             catch (Exception e)
             {
                 Debug.Log("Could not establish connection to device with ID " + deviceId + "\n" + e);
+                log = "Could not establish connection to device with ID " + deviceId + "\n" + e;
             }
         }
+
         if (ble.isConnected)
+        {
             Debug.Log("Connected to: " + targetDeviceName);
+            log = "Connected to: " + targetDeviceName;
+        }
+            
     }
 
     void ReadBleData()
@@ -455,6 +550,7 @@ public class BTCommu_Left : MonoBehaviour
     public void ResetHandler()
     {
         // Reset previous discovered devices
+        devicesCount = 0;
         discoveredDevices.Clear();
         deviceId = null;
         CleanUp();
@@ -493,6 +589,9 @@ public class BTCommu_Left : MonoBehaviour
             case (byte)funList.FI_CLUTCHGOTACTIVATED:
                 decodeMicrotube(frame);
                 break;
+            case (byte)funList.FI_BATTERY:
+                DecodeBatteryLevel(frame);
+                break;
             default:
                 break;
         }
@@ -500,23 +599,43 @@ public class BTCommu_Left : MonoBehaviour
 
     void decodePressure(byte[] frame)
     {
-        pressureData[0] = BitConverter.ToSingle(frame, 3);
-        pressureData[1] = BitConverter.ToSingle(frame, 8);
-        pressureData[2] = BitConverter.ToSingle(frame, 13);
-        pressureData[3] = BitConverter.ToSingle(frame, 18);
-        pressureData[4] = BitConverter.ToSingle(frame, 23);
-        pressureData[5] = BitConverter.ToSingle(frame, 28);
-        pressureData[6] = BitConverter.ToSingle(frame, 33);
+        if (isMicrotube)
+        {
+            pressureData[0] = BitConverter.ToInt32(frame, 3);
+            pressureData[1] = BitConverter.ToInt32(frame, 8);
+            pressureData[2] = BitConverter.ToInt32(frame, 13);
+            pressureData[3] = BitConverter.ToInt32(frame, 18);
+            //pressureData[4] = BitConverter.ToInt32(frame, 23);
 
-        flag_BMP280DataReady = true;
+            //continue the microtube data recording
+            sw.WriteLine("," + pressureData[0] + "," + pressureData[1] + "," + pressureData[2] + "," + pressureData[3]);
+            sw.Flush();
+        }
+        else
+        {
+            pressureData[0] = BitConverter.ToSingle(frame, 3);
+            pressureData[1] = BitConverter.ToSingle(frame, 8);
+            pressureData[2] = BitConverter.ToSingle(frame, 13);
+            pressureData[3] = BitConverter.ToSingle(frame, 18);
+            pressureData[4] = BitConverter.ToSingle(frame, 23);
+            pressureData[5] = BitConverter.ToSingle(frame, 28);
+            pressureData[6] = BitConverter.ToSingle(frame, 33);
 
-        //sw.WriteLine( "," + pressureData[0] );
+            flag_BMP280DataReady = true;
 
-        //Debug.Log("AirPressure:  "+ pressureData[0]+ "\t" + pressureData[1] + "\t" + pressureData[2] + "\t" + pressureData[3] + "\t" + pressureData[4] + "\t" + pressureData[5] + "\t" + pressureData[6]);
+            //sw.WriteLine( Environment.TickCount + "," + pressureData[0] + "," + pressureData[0]);
+
+            //Debug.Log("AirPressure:  "+ pressureData[0]+ "\t" + pressureData[1] + "\t" + pressureData[2] + "\t" + pressureData[3] + "\t" + pressureData[4] + "\t" + pressureData[5] + "\t" + pressureData[6]);
+
+            //sw.WriteLine(Environment.TickCount + "," + pressureData[0] + "," + pressureData[1] + "," + pressureData[2] + "," + pressureData[3]);
+            //sw.Flush();
+        }
+
 
     }
 
-
+    private double[] a = new double[5] { 529105739.13, 42686360.37, 257524593.5, 200076138.86, 25897917052.78 };
+    private double[] b = new double[5] { -2.55, -2.23, -2.45, -2.43, -3.08 };
 
     void decodeMicrotube(byte[] frame)
     {
@@ -529,6 +648,15 @@ public class BTCommu_Left : MonoBehaviour
             microtubeData[2] = (BitConverter.ToInt16(frame, 9));
             microtubeData[3] = (BitConverter.ToInt16(frame, 12));
             microtubeData[4] = (BitConverter.ToInt16(frame, 15));
+
+
+            for (int i = 0; i < 5; i++)
+            {
+                microtubeData[i] = a[i] * Math.Pow(microtubeData[i], b[i]);
+            }
+
+            sw.Write(Environment.TickCount + "," + microtubeData[0] + "," + microtubeData[1] + "," + microtubeData[2] + "," + microtubeData[3] + "," + microtubeData[4]);
+            //sw.Flush();
         }
         else
         {
@@ -543,7 +671,8 @@ public class BTCommu_Left : MonoBehaviour
         //FingerMapping_Left.Instance.UpdateFingerPosLeft();
         //Debug.Log(microtubeData[0] + "\t" + microtubeData[1] + "\t" + microtubeData[2] + "\t" + microtubeData[3] + "\t" + microtubeData[4]);
 
-
+        //sw.WriteLine(Environment.TickCount + "," + microtubeData[0] + "," + microtubeData[1] + "," + microtubeData[2] + "," + microtubeData[3] + "," + microtubeData[4]);
+        //sw.Flush();
 
         //if (isFirstRotationData)
         //{ 
@@ -584,8 +713,28 @@ public class BTCommu_Left : MonoBehaviour
         //Debug.Log(microtubeData[0] + ", "  + convertedRotationData[0]);
     }
 
+    public float batteryLevel = 0f;
+    //private Int16 batMin = 2200;
+    //private Int16 batMax = 2950;    //3000
+    private void DecodeBatteryLevel(byte[] frame)
+    {
+        //Debug.Log(BitConverter.ToString(frame));
+        batteryLevel = (BitConverter.ToSingle(frame, 3));
+        //Debug.Log(batteryLevel);
 
-    
+        //Int16 rawBattery = (BitConverter.ToInt16(frame, 3));
+        //batteryLevel = (float)(rawBattery - batMin) / (batMax - batMin);
+
+        //if (batteryLevel > 1)
+        //{
+        //    batteryLevel = 1;
+        //}
+        //else if (batteryLevel < 0.01f)
+        //{
+        //    batteryLevel = 0.01f;
+        //}
+    }
+
     public bool airPresSourceCtrlStarted = false;
     public void AirPressureSourceControl()
     {
@@ -629,8 +778,8 @@ public class BTCommu_Left : MonoBehaviour
         ResetHandler();
         flag_MicrotubeDataReady = false;
 
-        //sw.Close();
-        //fs.Close();
+        sw.Close();
+        fs.Close();
     }
     // Handle Quit Game
     void OnApplicationQuit()

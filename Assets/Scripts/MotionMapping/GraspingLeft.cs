@@ -6,8 +6,36 @@ using UnityEngine;
 using UnityEngine.Analytics;
 using UnityEngine.UI;
 
+
+
 public class GraspingLeft : MonoBehaviour
 {
+    [Header("Pressure intensity")]
+    [Tooltip("Range 0.1-1.")]
+    [Range(0.1f, 1f)]
+    public float pressureIntensity = 0;
+
+    [Header("Pressure speed")]
+    [Tooltip("Range 0.1-1.")]
+    [Range(0.1f, 1f)]
+    public float targetSpeed = 0;
+
+    [Header("Frequency Hz")]
+    [Tooltip("Range 0.1Hz-40Hz.")]
+    [Range(0.1f, 40f)]
+    public float targetFrequency = 0;
+
+    [Header("Vibration peak ratio")]
+    [Tooltip("Range 0.1-1.")]
+    [Range(0.1f, 1f)]
+    public float vibrationPeakRatio = 0;
+
+    [Header("Pulse count")]
+    [Tooltip("Range 1-1000.")]
+    [Range(1, 1000)]
+    public UInt16 pulseCount = 0;
+
+
     private List<String> colNameList = new List<String>();
     private Rigidbody targetRigidbody;
     private GameObject[] realFingertip;
@@ -19,12 +47,11 @@ public class GraspingLeft : MonoBehaviour
     private Vector3[] distance = new Vector3[5];
     private bool[] firstContactDeform = new bool[5];
 
-    private Text textSliderOn;
-    private Text textSliderOff;
-    private Slider sliderOn;
-    private Slider sliderOff;
+    private Text textSliderOn, textSliderOff, textPeakRatio, textPulseCount;
+    private Slider sliderOn, sliderOff, sliderPeakRatio, sliderPulseCount;
     public Button OnMinusFive, OnMinusOne, OffMinusFive, OffMinusOne, OnPlusFive, OnPlusOne, OffPlusFive, OffPlusOne;
-    public InputField setPressure; 
+    public InputField setPressure, setFrequency;
+    public Toggle togglePulse, toggleFloat;
 
     private FingerMapping_Left fingerMappingLeft;
     private float[] hapticStartPosition = new float[5];
@@ -50,6 +77,11 @@ public class GraspingLeft : MonoBehaviour
         sliderOn = GameObject.Find("Slider On Duration").GetComponent<Slider>();
         sliderOff = GameObject.Find("Slider Off Duration").GetComponent<Slider>();
 
+        textPeakRatio = GameObject.Find("Text Slider Peak Ratio").GetComponent<Text>();
+        sliderPeakRatio = GameObject.Find("Slider Peak Ratio").GetComponent<Slider>();
+        textPulseCount = GameObject.Find("Text Slider Pulse").GetComponent<Text>();
+        sliderPulseCount = GameObject.Find("Slider Pulse").GetComponent<Slider>();
+
         OnMinusFive.onClick.AddListener(delegate { sliderOn.value -= 5; });
         OnMinusOne.onClick.AddListener(delegate { sliderOn.value -= 1; });
         OnPlusFive.onClick.AddListener(delegate { sliderOn.value += 5; });
@@ -64,6 +96,8 @@ public class GraspingLeft : MonoBehaviour
     {
         textSliderOn.text = "On Duration: " + sliderOn.value;
         textSliderOff.text = "Off Duration: " + sliderOff.value;
+        textPeakRatio.text = "Peak Ratio: " + sliderPeakRatio.value;
+        textPulseCount.text = "Pulse Count: " + sliderPulseCount.value;
 
         if ((colNameList.Count >= 2) & colNameList.Contains("GhostThumbB"))
         {
@@ -255,7 +289,7 @@ public class GraspingLeft : MonoBehaviour
         if (bufState == "Enter")
         {
             colNameList.Add(bufName);
-            Haptics.ApplyHaptics(clutchState, targetPres);
+            Haptics.ApplyHaptics(clutchState, targetPres, false);
             Debug.Log("Enter");
 
             collider[fingerID] = col;
@@ -279,7 +313,7 @@ public class GraspingLeft : MonoBehaviour
         else if (bufState == "Exit")
         {
             colNameList.Remove(bufName);
-            Haptics.ApplyHaptics(clutchState, targetPres);
+            Haptics.ApplyHaptics(clutchState, targetPres, false);
             collider[fingerID] = null;
             deformer[fingerID] = null;
             Destroy(touchPointGameObject[fingerID]);
@@ -310,12 +344,17 @@ public class GraspingLeft : MonoBehaviour
         byte[] clutchState = {0, 0};
         byte[] valveTiming = SetValveTimingFromSlider();
 
-        if (setPressure.text != "")
+        if (togglePulse.isOn & (setPressure.text != ""))
+            Haptics.ApplyHaptics(Convert.ToSingle(setFrequency.text), clutchState, Convert.ToByte(setPressure.text), Convert.ToByte(sliderPeakRatio.value), Convert.ToUInt16(sliderPulseCount.value));
+        else if((setFrequency.text != "") & (setPressure.text != ""))
+            Haptics.ApplyHaptics(Convert.ToSingle(setFrequency.text), clutchState, Convert.ToByte(setPressure.text),Convert.ToByte(sliderPeakRatio.value));
+        else if (setPressure.text != "")
         {
-            Debug.Log(Convert.ToByte(setPressure.text).ToString());
-            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+            if (toggleFloat.isOn)
+                Haptics.ApplyHaptics(clutchState, Convert.ToSingle(setPressure.text), false);
+            else
+                Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text), false);
         }
-            
         else
             Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
 
@@ -324,8 +363,18 @@ public class GraspingLeft : MonoBehaviour
     {
         byte[] clutchState = { 0, 2 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        if (setPressure.text != "")
-            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+
+        if (togglePulse.isOn & (setPressure.text != ""))
+            Haptics.ApplyHaptics(Convert.ToSingle(setFrequency.text), clutchState, Convert.ToByte(setPressure.text), Convert.ToByte(sliderPeakRatio.value), Convert.ToUInt16(sliderPulseCount.value));
+        else if((setFrequency.text != "") & (setPressure.text != ""))
+            Haptics.ApplyHaptics(Convert.ToSingle(setFrequency.text), clutchState, Convert.ToByte(setPressure.text), Convert.ToByte(sliderPeakRatio.value));
+        else if (setPressure.text != "")
+        {
+            if (toggleFloat.isOn)
+                Haptics.ApplyHaptics(clutchState, Convert.ToSingle(setPressure.text), false);
+            else
+                Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text), false);
+        }
         else
             Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
@@ -333,8 +382,18 @@ public class GraspingLeft : MonoBehaviour
     {
         byte[] clutchState = { 1, 0 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        if (setPressure.text != "")
-            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+
+        if (togglePulse.isOn & (setPressure.text != ""))
+            Haptics.ApplyHaptics(0xff, clutchState, Convert.ToByte(setPressure.text), false);
+        else if ((setFrequency.text != "") & (setPressure.text != ""))
+            Haptics.ApplyHaptics(Convert.ToByte(setFrequency.text), clutchState, Convert.ToByte(setPressure.text), false);
+        else if (setPressure.text != "")
+        {
+            if (toggleFloat.isOn)
+                Haptics.ApplyHaptics(clutchState, Convert.ToSingle(setPressure.text), false);
+            else
+                Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text), false);
+        }
         else
             Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
@@ -342,8 +401,18 @@ public class GraspingLeft : MonoBehaviour
     {
         byte[] clutchState = { 1, 2 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        if (setPressure.text != "")
-            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+
+        if (togglePulse.isOn & (setPressure.text != ""))
+            Haptics.ApplyHaptics(0xff, clutchState, Convert.ToByte(setPressure.text), false);
+        else if ((setFrequency.text != "") & (setPressure.text != ""))
+            Haptics.ApplyHaptics(Convert.ToByte(setFrequency.text), clutchState, Convert.ToByte(setPressure.text), false);
+        else if (setPressure.text != "")
+        {
+            if (toggleFloat.isOn)
+                Haptics.ApplyHaptics(clutchState, Convert.ToSingle(setPressure.text), false);
+            else
+                Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text), false);
+        }
         else
             Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
@@ -351,8 +420,18 @@ public class GraspingLeft : MonoBehaviour
     {
         byte[] clutchState = { 2, 0 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        if (setPressure.text != "")
-            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+
+        if (togglePulse.isOn & (setPressure.text != ""))
+            Haptics.ApplyHaptics(0xff, clutchState, Convert.ToByte(setPressure.text), false);
+        else if ((setFrequency.text != "") & (setPressure.text != ""))
+            Haptics.ApplyHaptics(Convert.ToByte(setFrequency.text), clutchState, Convert.ToByte(setPressure.text), false);
+        else if (setPressure.text != "")
+        {
+            if (toggleFloat.isOn)
+                Haptics.ApplyHaptics(clutchState, Convert.ToSingle(setPressure.text), false);
+            else
+                Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text),false);
+        }
         else
             Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
@@ -360,8 +439,18 @@ public class GraspingLeft : MonoBehaviour
     {
         byte[] clutchState = { 2, 2 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        if (setPressure.text != "")
-            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+
+        if (togglePulse.isOn & (setPressure.text != ""))
+            Haptics.ApplyHaptics(0xff, clutchState, Convert.ToByte(setPressure.text), false);
+        else if ((setFrequency.text != "") & (setPressure.text != ""))
+            Haptics.ApplyHaptics(Convert.ToByte(setFrequency.text), clutchState, Convert.ToByte(setPressure.text), false);
+        else if (setPressure.text != "")
+        {
+            if (toggleFloat.isOn)
+                Haptics.ApplyHaptics(clutchState, Convert.ToSingle(setPressure.text), false);
+            else
+                Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text), false);
+        }
         else
             Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
@@ -369,8 +458,18 @@ public class GraspingLeft : MonoBehaviour
     {
         byte[] clutchState = { 3, 0 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        if (setPressure.text != "")
-            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+
+        if (togglePulse.isOn & (setPressure.text != ""))
+            Haptics.ApplyHaptics(0xff, clutchState, Convert.ToByte(setPressure.text), false);
+        else if ((setFrequency.text != "") & (setPressure.text != ""))
+            Haptics.ApplyHaptics(Convert.ToByte(setFrequency.text), clutchState, Convert.ToByte(setPressure.text), false);
+        else if (setPressure.text != "")
+        {
+            if (toggleFloat.isOn)
+                Haptics.ApplyHaptics(clutchState, Convert.ToSingle(setPressure.text), false);
+            else
+                Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text), false);
+        }
         else
             Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
@@ -378,8 +477,18 @@ public class GraspingLeft : MonoBehaviour
     {
         byte[] clutchState = { 3, 2 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        if (setPressure.text != "")
-            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+
+        if (togglePulse.isOn & (setPressure.text != ""))
+            Haptics.ApplyHaptics(0xff, clutchState, Convert.ToByte(setPressure.text), false);
+        else if ((setFrequency.text != "") & (setPressure.text != ""))
+            Haptics.ApplyHaptics(Convert.ToByte(setFrequency.text), clutchState, Convert.ToByte(setPressure.text), false);
+        else if (setPressure.text != "")
+        {
+            if (toggleFloat.isOn)
+                Haptics.ApplyHaptics(clutchState, Convert.ToSingle(setPressure.text), false);
+            else
+                Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text), false);
+        }
         else
             Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
@@ -387,8 +496,18 @@ public class GraspingLeft : MonoBehaviour
     {
         byte[] clutchState = { 4, 0 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        if (setPressure.text != "")
-            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+
+        if (togglePulse.isOn & (setPressure.text != ""))
+            Haptics.ApplyHaptics(0xff, clutchState, Convert.ToByte(setPressure.text), false);
+        else if ((setFrequency.text != "") & (setPressure.text != ""))
+            Haptics.ApplyHaptics(Convert.ToByte(setFrequency.text), clutchState, Convert.ToByte(setPressure.text), false);
+        else if (setPressure.text != "")
+        {
+            if (toggleFloat.isOn)
+                Haptics.ApplyHaptics(clutchState, Convert.ToSingle(setPressure.text), false);
+            else
+                Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text), false);
+        }
         else
             Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
@@ -396,8 +515,18 @@ public class GraspingLeft : MonoBehaviour
     {
         byte[] clutchState = { 4, 2 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        if (setPressure.text != "")
-            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+
+        if (togglePulse.isOn & (setPressure.text != ""))
+            Haptics.ApplyHaptics(0xff, clutchState, Convert.ToByte(setPressure.text), false);
+        else if ((setFrequency.text != "") & (setPressure.text != ""))
+            Haptics.ApplyHaptics(Convert.ToByte(setFrequency.text), clutchState, Convert.ToByte(setPressure.text), false);
+        else if (setPressure.text != "")
+        {
+            if (toggleFloat.isOn)
+                Haptics.ApplyHaptics(clutchState, Convert.ToSingle(setPressure.text), false);
+            else
+                Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text), false);
+        }
         else
             Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
@@ -406,8 +535,18 @@ public class GraspingLeft : MonoBehaviour
     {
         byte[] clutchState = { 5, 0 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        if (setPressure.text != "")
-            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+
+        if (togglePulse.isOn & (setPressure.text != ""))
+            Haptics.ApplyHaptics(0xff, clutchState, Convert.ToByte(setPressure.text), false);
+        else if ((setFrequency.text != "") & (setPressure.text != ""))
+            Haptics.ApplyHaptics(Convert.ToByte(setFrequency.text), clutchState, Convert.ToByte(setPressure.text), false);
+        else if (setPressure.text != "")
+        {
+            if (toggleFloat.isOn)
+                Haptics.ApplyHaptics(clutchState, Convert.ToSingle(setPressure.text), false);
+            else
+                Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text), false);
+        }
         else
             Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
@@ -415,8 +554,20 @@ public class GraspingLeft : MonoBehaviour
     {
         byte[] clutchState = { 5, 2 };
         byte[] valveTiming = SetValveTimingFromSlider();
-        if (setPressure.text != "")
-            Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text));
+
+        if (togglePulse.isOn & (setPressure.text != ""))
+            Haptics.ApplyHaptics(0xff, clutchState, Convert.ToByte(setPressure.text), false);
+        else if ((setFrequency.text != "") & (setPressure.text != ""))
+            Haptics.ApplyHaptics(Convert.ToByte(setFrequency.text), clutchState, Convert.ToByte(setPressure.text), false);
+        else if (setPressure.text != "")
+        {
+            if (toggleFloat.isOn)
+                Haptics.ApplyHaptics(clutchState, Convert.ToSingle(setPressure.text), false);
+            else
+                Haptics.ApplyHaptics(clutchState, Convert.ToByte(setPressure.text), false);
+        }
+        else if ((setFrequency.text != "") & (setPressure.text != ""))
+            Haptics.ApplyHaptics(Convert.ToByte(setFrequency.text), clutchState, Convert.ToByte(setPressure.text), false);
         else
             Haptics.ApplyHapticsWithTiming(clutchState, valveTiming);
     }
@@ -434,7 +585,7 @@ public class GraspingLeft : MonoBehaviour
             SetValveTimingFromSlider(), SetValveTimingFromSlider(), SetValveTimingFromSlider()
         };
         if (setPressure.text != "")
-            Haptics.ApplyHaptics(clutchStates, Convert.ToByte(setPressure.text));
+            Haptics.ApplyHaptics(clutchStates, Convert.ToByte(setPressure.text), false);
         else
             Haptics.ApplyHapticsWithTiming(clutchStates, valveTimings);
     }
@@ -451,9 +602,57 @@ public class GraspingLeft : MonoBehaviour
             SetValveTimingFromSlider(), SetValveTimingFromSlider(), SetValveTimingFromSlider()
         };
         if (setPressure.text != "")
-            Haptics.ApplyHaptics(clutchStates, Convert.ToByte(setPressure.text));
+            Haptics.ApplyHaptics(clutchStates, Convert.ToByte(setPressure.text), false);
         else
             Haptics.ApplyHapticsWithTiming(clutchStates, valveTimings);
+    }
+
+    public void TestClick(float interval_ms)
+    {
+        StartCoroutine(DelayTestSend(interval_ms));
+    }
+
+    IEnumerator DelayTestSend(float interval_ms)
+    {
+        int count = Convert.ToInt32(GameObject.Find("TextTestSendCount").GetComponent<InputField>().text);
+
+        if (count > 0)
+        {
+            
+        }
+        else
+        {
+            yield return null;
+        }
+
+        for (int i = 0; i < count; i++)
+        {
+            byte[][] clutchStates = new byte[6][]
+            {
+                new Byte[] { 0x00, 0x00 }, new Byte[] { 0x01, 0x00 }, new Byte[] { 0x02, 0x00 },
+                new Byte[] { 0x03, 0x00 }, new Byte[] { 0x04, 0x00 }, new Byte[] { 0x05, 0x00 }
+            };
+
+            if (((i+1) % 2) == 0)
+            {
+                clutchStates = new byte[6][]
+                {
+                    new Byte[] { 0x00, 0x02 }, new Byte[] { 0x01, 0x02 }, new Byte[] { 0x02, 0x02 },
+                    new Byte[] { 0x03, 0x02 }, new Byte[] { 0x04, 0x02 }, new Byte[] { 0x05, 0x02 }
+                };
+            }
+
+            byte[][] valveTimings = new byte[6][]
+            {
+                SetValveTimingFromSlider(), SetValveTimingFromSlider(), SetValveTimingFromSlider(),
+                SetValveTimingFromSlider(), SetValveTimingFromSlider(), SetValveTimingFromSlider()
+            };
+            if (setPressure.text != "")
+                Haptics.ApplyHaptics(clutchStates, Convert.ToByte(setPressure.text), false);
+
+            yield return new WaitForSeconds(interval_ms/1000f);
+        }
+        
     }
 
     private Text startPositionText, curPositionText;
@@ -461,7 +660,7 @@ public class GraspingLeft : MonoBehaviour
     public void PalpationInClick()
     {
         startPositionText = GameObject.Find("TexStartForce").GetComponent<Text>();
-        startPosition = btCommu.microtubeData[1] + btCommu.microtubeData[2] + btCommu.microtubeData[3];
+        startPosition = (int)btCommu.microtubeData[1] + (int)btCommu.microtubeData[2] + (int)btCommu.microtubeData[3];
         startPositionText.text = startPosition.ToString();
 
         byte[][] clutchStates = new byte[][]
@@ -474,7 +673,7 @@ public class GraspingLeft : MonoBehaviour
             SetValveTimingFromSlider(), SetValveTimingFromSlider(), SetValveTimingFromSlider()
         };
         if (setPressure.text != "")
-            Haptics.ApplyHaptics(clutchStates, Convert.ToByte(setPressure.text));
+            Haptics.ApplyHaptics(clutchStates, Convert.ToByte(setPressure.text), false);
         else
             Haptics.ApplyHapticsWithTiming(clutchStates, valveTimings);
     }
@@ -490,7 +689,7 @@ public class GraspingLeft : MonoBehaviour
             SetValveTimingFromSlider(), SetValveTimingFromSlider(), SetValveTimingFromSlider()
         };
         if (setPressure.text != "")
-            Haptics.ApplyHaptics(clutchStates, Convert.ToByte(setPressure.text));
+            Haptics.ApplyHaptics(clutchStates, Convert.ToByte(setPressure.text), false);
         else
             Haptics.ApplyHapticsWithTiming(clutchStates, valveTimings);
     }
@@ -498,7 +697,42 @@ public class GraspingLeft : MonoBehaviour
     void Update()
     {
         curPositionText = GameObject.Find("TextCurrentForce").GetComponent<Text>();
-        curPosition = btCommu.microtubeData[1] + btCommu.microtubeData[2] + btCommu.microtubeData[3] - startPosition;
+        curPosition = (int)(btCommu.microtubeData[1] + btCommu.microtubeData[2] + btCommu.microtubeData[3] - startPosition);
         curPositionText.text = curPosition.ToString();
     }
+
+    
+
+    public void OnTestingVibButtonStartClicked()
+    {
+        //byte[] data = HEXRVibration(Finger.Thumb, true, targetFrequency);
+        //byte[] data = HEXRVibration(Finger.Thumb, true, targetFrequency, pressureIntensity);
+        //byte[] data = HEXRVibration(Finger.Thumb, true, targetFrequency, pressureIntensity, vibrationPeakRatio, targetSpeed);
+
+        //byte[] data = HEXRPulse(Finger.Thumb, true, targetFrequency, pulseCount);
+        //byte[] data = HEXRPulse(Finger.Thumb, true, targetFrequency, pressureIntensity, pulseCount);
+        //byte[] data = HEXRPulse(Finger.Thumb, true, targetFrequency, pressureIntensity, vibrationPeakRatio, pulseCount);
+
+        //byte[] data = HEXRPressure(Finger.Thumb, true, pressureIntensity, targetSpeed);
+
+        //BTCommu_Left.Instance.BTSend(data);
+    }
+
+    public void OnTestingVibButtonStopClicked()
+    {
+        //byte[] data = HEXRVibration(Finger.Thumb, false, targetFrequency);
+        //byte[] data = HEXRVibration(Finger.Thumb, false, targetFrequency, pressureIntensity);
+        //byte[] data = HEXRVibration(Finger.Thumb, false, targetFrequency, pressureIntensity, vibrationPeakRatio, targetSpeed);
+
+        //byte[] data = HEXRPulse(Finger.Thumb, false, targetFrequency, pulseCount);
+        //byte[] data = HEXRPulse(Finger.Thumb, false, targetFrequency, pressureIntensity, pulseCount);
+        //byte[] data = HEXRPulse(Finger.Thumb, false, targetFrequency, pressureIntensity, vibrationPeakRatio, pulseCount);
+
+        //byte[] data = HEXRPressure(Finger.Thumb, false, pressureIntensity, targetSpeed);
+
+        //BTCommu_Left.Instance.BTSend(data);
+    }
+
+
+    
 }

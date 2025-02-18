@@ -47,11 +47,11 @@ public class ConsistencyTest : MonoBehaviour
                 {
                     byte[] clutchState = new byte[] {i, 0};
                     byte tarPres = (byte) (j * 10);
-                    Haptics.ApplyHaptics(clutchState, tarPres);
+                    Haptics.ApplyHaptics(clutchState, tarPres, false);
                     Thread.Sleep(3000);
 
                     clutchState = new byte[] {i, 2};
-                    Haptics.ApplyHaptics(clutchState, tarPres);
+                    Haptics.ApplyHaptics(clutchState, tarPres, false);
                     Thread.Sleep(1000);
                 }
             }

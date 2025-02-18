@@ -239,7 +239,7 @@ public class MultipointHaptics : MonoBehaviour
 
                 if (cutHapticsPoint.isSetPres)
                 {
-                    Haptics.ApplyHaptics(cutHapticsPoint.frequency, cutHapticsPoint.clutchStates, cutHapticsPoint.tarPres);
+                    Haptics.ApplyHaptics(cutHapticsPoint.frequency, cutHapticsPoint.clutchStates, cutHapticsPoint.tarPres, false);
 
                     sw.WriteLine("Indenter Haptics timing" + "," + Environment.TickCount);
                     sw.Flush();
