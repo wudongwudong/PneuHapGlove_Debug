@@ -209,7 +209,7 @@ public class Haptics : MonoBehaviour
     /// <param name="finger">Set haptics channel</param>
     /// <param name="state">Set TRUE to generate vibration, set FALSE to stop vibration</param>
     /// <param name="frequency">Set vibration frequency from 0.1Hz to 2Hz</param>
-    /// <param name="intensity">Set vibration intensity from 0.1 to 0.7</param>
+    /// <param name="intensity">Set vibration intensity from 0.1 to 1</param>
     /// <param name="peakRatio">Set peak ratio from 0.2 to 0.8</param>
     /// <param name="speed">Set slop of the pulse wave from 0.1 to 1</param>
     /// <param name="endIntensity">Set the pressure intensity to keep after vibration</param>
@@ -221,8 +221,8 @@ public class Haptics : MonoBehaviour
         Encode.Instance.add_f32(frequency);
         Encode.Instance.add_u8(hapticsState[0]);             // which finger
         Encode.Instance.add_u8(hapticsState[1]);             // enter, stay or exit
-        intensity = Clamp(0.1f, 0.7f, intensity);
-        float pressure = LinerMapping(0.1f, 0.7f, intensity, 15, 30);
+        intensity = Clamp(0.1f, 1f, intensity);
+        float pressure = LinerMapping(0.1f, 1f, intensity, 15, 50);
         peakRatio = Clamp(0.2f, 0.8f, peakRatio);
         peakRatio = peakRatio * 100;
         Encode.Instance.add_f32(pressure);
@@ -272,7 +272,7 @@ public class Haptics : MonoBehaviour
     /// <param name="finger">Set haptics channel</param>
     /// <param name="state">Set TRUE to generate vibration, set FALSE to stop vibration</param>
     /// <param name="frequency">Set vibration frequency from 0.1Hz to 2Hz</param>
-    /// <param name="intensity">Set vibration intensity from 0.1 to 0.7</param>
+    /// <param name="intensity">Set vibration intensity from 0.1 to 1</param>
     /// <param name="peakRatio">Set peak ratio from 0.2 to 0.8</param>
     public static byte[] HEXRPulse(Finger finger, bool state, float frequency, float intensity, float peakRatio, float speed, UInt16 pulseCount, float endIntensity)
     {
@@ -282,8 +282,8 @@ public class Haptics : MonoBehaviour
         Encode.Instance.add_f32(frequency);
         Encode.Instance.add_u8(hapticsState[0]);             // which finger
         Encode.Instance.add_u8(hapticsState[1]);             // enter, stay or exit
-        intensity = Clamp(0.1f, 0.7f, intensity);
-        float pressure = LinerMapping(0.1f, 0.7f, intensity, 15, 30);
+        intensity = Clamp(0.1f, 1f, intensity);
+        float pressure = LinerMapping(0.1f, 1f, intensity, 15, 50);
         peakRatio = Clamp(0.2f, 0.8f, peakRatio);
         peakRatio = peakRatio * 100;
         Encode.Instance.add_f32(pressure);

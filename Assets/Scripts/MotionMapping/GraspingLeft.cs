@@ -703,35 +703,7 @@ public class GraspingLeft : MonoBehaviour
 
     
 
-    public void OnTestingVibButtonStartClicked()
-    {
-        //byte[] data = HEXRVibration(Finger.Thumb, true, targetFrequency);
-        //byte[] data = HEXRVibration(Finger.Thumb, true, targetFrequency, pressureIntensity);
-        //byte[] data = HEXRVibration(Finger.Thumb, true, targetFrequency, pressureIntensity, vibrationPeakRatio, targetSpeed);
-
-        //byte[] data = HEXRPulse(Finger.Thumb, true, targetFrequency, pulseCount);
-        //byte[] data = HEXRPulse(Finger.Thumb, true, targetFrequency, pressureIntensity, pulseCount);
-        //byte[] data = HEXRPulse(Finger.Thumb, true, targetFrequency, pressureIntensity, vibrationPeakRatio, pulseCount);
-
-        //byte[] data = HEXRPressure(Finger.Thumb, true, pressureIntensity, targetSpeed);
-
-        //BTCommu_Left.Instance.BTSend(data);
-    }
-
-    public void OnTestingVibButtonStopClicked()
-    {
-        //byte[] data = HEXRVibration(Finger.Thumb, false, targetFrequency);
-        //byte[] data = HEXRVibration(Finger.Thumb, false, targetFrequency, pressureIntensity);
-        //byte[] data = HEXRVibration(Finger.Thumb, false, targetFrequency, pressureIntensity, vibrationPeakRatio, targetSpeed);
-
-        //byte[] data = HEXRPulse(Finger.Thumb, false, targetFrequency, pulseCount);
-        //byte[] data = HEXRPulse(Finger.Thumb, false, targetFrequency, pressureIntensity, pulseCount);
-        //byte[] data = HEXRPulse(Finger.Thumb, false, targetFrequency, pressureIntensity, vibrationPeakRatio, pulseCount);
-
-        //byte[] data = HEXRPressure(Finger.Thumb, false, pressureIntensity, targetSpeed);
-
-        //BTCommu_Left.Instance.BTSend(data);
-    }
+    
 
 
     
