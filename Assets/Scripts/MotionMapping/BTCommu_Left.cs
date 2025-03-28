@@ -14,8 +14,8 @@ using UnityEngine.UI;
 #if BLE
 public class BTCommu_Left : MonoBehaviour
 {
-    private FileStream fs;
-    private StreamWriter sw;
+    //private FileStream fs;
+    //private StreamWriter sw;
 
     static BTCommu_Left _instance;
     public static BTCommu_Left Instance
@@ -117,24 +117,22 @@ public class BTCommu_Left : MonoBehaviour
         readingThread = new Thread(ReadBleData);
 
 
-        string filePath = "C:\\Users\\JM\\Desktop\\" + "ForceSensorCalibration_" + deviceName + ".csv"; //scissor cutting
-        if (File.Exists(filePath))
-        {
-            fs = new FileStream(filePath, FileMode.Append, FileAccess.Write);
-        }
-        else
-        {
-            fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-        }
-        sw = new StreamWriter(fs, System.Text.Encoding.UTF8);
+        //string filePath = "C:\\Users\\JM\\Desktop\\" + "ForceSensorCalibration_" + deviceName + ".csv"; //scissor cutting
+        //if (File.Exists(filePath))
+        //{
+        //    fs = new FileStream(filePath, FileMode.Append, FileAccess.Write);
+        //}
+        //else
+        //{
+        //    fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+        //}
+        //sw = new StreamWriter(fs, System.Text.Encoding.UTF8);
 
-        sw.WriteLine("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-        sw.WriteLine(deviceName + "," + DateTime.Now.ToString("yyyy-MM-dd-HH:mm"));
-        sw.WriteLine("Tick" + "," + "F_thumb" + "F_index" + "F_middle" + "F_ring" + "F_pinky" + "R_thumb" + "R_index" + "R_middle" + "R_ring");
-        sw.Flush();
+        //sw.WriteLine("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+        //sw.WriteLine(deviceName + "," + DateTime.Now.ToString("yyyy-MM-dd-HH:mm"));
+        //sw.WriteLine("Tick" + "," + "F_thumb" + "F_index" + "F_middle" + "F_ring" + "F_pinky" + "R_thumb" + "R_index" + "R_middle" + "R_ring");
+        //sw.Flush();
 
-        //sw.Close();
-        //fs.Close();
 
     }
 
@@ -607,9 +605,9 @@ public class BTCommu_Left : MonoBehaviour
             pressureData[3] = BitConverter.ToInt32(frame, 18);
             //pressureData[4] = BitConverter.ToInt32(frame, 23);
 
-            //continue the microtube data recording
-            sw.WriteLine("," + pressureData[0] + "," + pressureData[1] + "," + pressureData[2] + "," + pressureData[3]);
-            sw.Flush();
+            ////continue the microtube data recording
+            //sw.WriteLine("," + pressureData[0] + "," + pressureData[1] + "," + pressureData[2] + "," + pressureData[3]);
+            //sw.Flush();
         }
         else
         {
@@ -655,8 +653,8 @@ public class BTCommu_Left : MonoBehaviour
                 microtubeData[i] = a[i] * Math.Pow(microtubeData[i], b[i]);
             }
 
-            sw.Write(Environment.TickCount + "," + microtubeData[0] + "," + microtubeData[1] + "," + microtubeData[2] + "," + microtubeData[3] + "," + microtubeData[4]);
-            //sw.Flush();
+            //sw.Write(Environment.TickCount + "," + microtubeData[0] + "," + microtubeData[1] + "," + microtubeData[2] + "," + microtubeData[3] + "," + microtubeData[4]);
+            ////sw.Flush();
         }
         else
         {
@@ -778,8 +776,8 @@ public class BTCommu_Left : MonoBehaviour
         ResetHandler();
         flag_MicrotubeDataReady = false;
 
-        sw.Close();
-        fs.Close();
+        //sw.Close();
+        //fs.Close();
     }
     // Handle Quit Game
     void OnApplicationQuit()
